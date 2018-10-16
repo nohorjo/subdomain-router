@@ -16,7 +16,7 @@ eg.
 ```json
 {
     "sub": {
-        "first" {
+        "first": {
             "my": 8080
         },
         "second": 8081,
