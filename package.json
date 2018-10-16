@@ -1,0 +1,16 @@
+{
+  "name": "subdomain-router",
+  "version": "1.0.0",
+  "description": "Proxies traffic to other localhost ports based on subdomain",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "Muhammed Haque",
+  "license": "MIT",
+  "dependencies": {
+    "fs-extra": "7.0.0",
+    "http-proxy": "1.17.0"
+  }
+}

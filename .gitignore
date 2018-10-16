@@ -1,0 +1,15 @@
+node_modules
+out
+.vscode/*
+
+.nyc_output/*
+package.json.*
+coverage/*
+dist/*
+*.sh
+mochawesome-report/*
+*.swp
+*.vim
+tags
+sessions/*
+routes.json
