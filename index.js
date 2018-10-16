@@ -25,13 +25,17 @@ if (cluster.isMaster) {
     });
 
     http.createServer((req, res) => {
-        const subDomain = req.headers.host
-                            .replace(/(\.[^\.]*){2}$/, '')
-                            .split('.')
-                            .reverse()
-                            .join('.');
-        const port = eval(`routes.${subDomain}`);
-        proxy.web(req, res, {target: `http://localhost:${+port || port.$}`});
+        try {
+            const subDomain = req.headers.host
+                                .replace(/(\.[^\.]*){2}$/, '')
+                                .split('.')
+                                .reverse()
+                                .join('.');
+            const port = eval(`routes.${subDomain}`);
+            proxy.web(req, res, {target: `http://localhost:${+port || port.$}`});
+        } catch (e) {
+            res.end('Error ' + e);
+        }
     }).listen(
         process.env.PORT || 80,
         () => console.log(`Server ${cluster.worker.id} started`)
