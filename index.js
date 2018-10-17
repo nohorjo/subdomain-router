@@ -31,10 +31,20 @@ if (cluster.isMaster) {
                                 .split('.')
                                 .reverse()
                                 .join('.');
-            const port = eval(`routes.${subDomain}`);
-            proxy.web(req, res, {target: `http://localhost:${+port || port.$}`});
+            let port = eval(`routes.${subDomain}`);
+            port = +port || +port.$;
+            if (!port) throw 'not found';
+            proxy.web(req, res, {target: `http://localhost:${port}`});
         } catch (e) {
-            res.end('Error ' + e);
+            switch (e) {
+                case 'not found':
+                    res.statusCode = 404;
+                    break;
+                default:
+                    res.statusCode = 500;
+                    break;
+            }
+            res.end('Error :' + e);
         }
     }).listen(
         process.env.PORT || 80,
