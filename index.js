@@ -21,7 +21,13 @@ if (cluster.isMaster) {
 
     fs.watchFile(routeFile, () => {
         console.log('route file updated');
-        routes = fs.readJsonSync(routeFile);
+        !function tryRead() {
+            try {
+                routes = fs.readJsonSync(routeFile);
+            } catch (e) {
+                setTimeout(tryRead, 1000);
+            }
+        }()
     });
 
     http.createServer((req, res) => {
