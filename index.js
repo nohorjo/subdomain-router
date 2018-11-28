@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const os = require('os');
 const cluster = require('cluster');
+const parseDomain = require('parse-domain');
 
 const cpus = os.cpus().length;
 
@@ -31,25 +32,41 @@ if (cluster.isMaster) {
     });
 
     http.createServer((req, res) => {
+        let port;
         try {
-            const subDomain = req.headers.host
-                                .replace(/(\.[^\.]*){2}$/, '')
-                                .split('.')
-                                .reverse()
-                                .join('.');
-            let port = eval(`routes.${subDomain}`);
-            port = +port || +port.$;
+            const { subdomain } = parseDomain(req.headers.host, {customTlds: /localhost/});
+            if (subdomain === '') {
+                port = routes.$;
+            } else {
+                port = subdomain.split('.').reverse().join('.');
+                getport: do {
+                    try {
+                        port = eval(`routes.${port}`);
+                    } catch (e) {
+                        port = null;
+                        break;
+                    }
+                    switch (typeof port) {
+                    case 'number':
+                        break getport;
+                    case 'object':
+                        if  (!port) break getport;
+                        port = port.$;
+                        break;
+                    case 'undefined':
+                        break getport;
+                    case 'string':
+                        port = port.split('.').reverse().join('.');
+                        break;
+                    }
+                } while (true);
+            }
+            if (!port) port = routes._;
             if (!port) throw 'not found';
+            console.log(subdomain, port)
             proxy.web(req, res, {target: `http://localhost:${port}`});
         } catch (e) {
-            switch (e) {
-                case 'not found':
-                    res.statusCode = 404;
-                    break;
-                default:
-                    res.statusCode = 500;
-                    break;
-            }
+            res.statusCode = e === 'not found' ? 404 : 500;
             res.end('Error :' + e);
         }
     }).listen(
