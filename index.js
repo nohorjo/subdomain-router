@@ -31,45 +31,55 @@ if (cluster.isMaster) {
         }()
     });
 
-    http.createServer((req, res) => {
+    function getTarget(req) {
         let port;
+        const { subdomain } = parseDomain(req.headers.host, {customTlds: /localhost/});
+        if (subdomain === '') {
+            port = routes.$;
+        } else {
+            port = subdomain.split('.').reverse().join('.');
+            getport: do {
+                try {
+                    port = eval(`routes.${port}`);
+                } catch (e) {
+                    port = null;
+                    break;
+                }
+                switch (typeof port) {
+                case 'number':
+                    break getport;
+                case 'object':
+                    if  (!port) break getport;
+                    port = port.$;
+                    break;
+                case 'undefined':
+                    break getport;
+                case 'string':
+                    port = port.split('.').reverse().join('.');
+                    break;
+                }
+            } while (true);
+        }
+        if (!port) port = routes._;
+        if (!port) throw 'not found';
+        console.log(subdomain, port)
+        return port;
+    }
+
+    const server = http.createServer((req, res) => {
         try {
-            const { subdomain } = parseDomain(req.headers.host, {customTlds: /localhost/});
-            if (subdomain === '') {
-                port = routes.$;
-            } else {
-                port = subdomain.split('.').reverse().join('.');
-                getport: do {
-                    try {
-                        port = eval(`routes.${port}`);
-                    } catch (e) {
-                        port = null;
-                        break;
-                    }
-                    switch (typeof port) {
-                    case 'number':
-                        break getport;
-                    case 'object':
-                        if  (!port) break getport;
-                        port = port.$;
-                        break;
-                    case 'undefined':
-                        break getport;
-                    case 'string':
-                        port = port.split('.').reverse().join('.');
-                        break;
-                    }
-                } while (true);
-            }
-            if (!port) port = routes._;
-            if (!port) throw 'not found';
-            console.log(subdomain, port)
-            proxy.web(req, res, {target: `http://localhost:${port}`});
+            proxy.web(req, res, {target: `http://localhost:${getTarget(req)}`});
         } catch (e) {
             res.statusCode = e === 'not found' ? 404 : 500;
             res.end('Error :' + e);
         }
-    }).listen(
+    });
+
+    server.on('upgrade', (req, socket, head) => {
+        proxy.ws(req, socket, head, {target: `ws://localhost:${getTarget(req)}`});
+    });
+    
+    server.listen(
         process.env.PORT || 80,
         () => console.log(`Server ${cluster.worker.id} started`)
     );
