@@ -5,8 +5,19 @@ const fs = require('fs-extra');
 const os = require('os');
 const cluster = require('cluster');
 const parseDomain = require('parse-domain');
+const net = require('net');
 
 const cpus = os.cpus().length;
+
+const isPortInUse = port => new Promise((res, rej) => {
+    const tester = net.createServer()
+        .once('error', err => {
+            if (err.code != 'EADDRINUSE') rej(err);
+            else res(true);
+        })
+        .once('listening', () => tester.once('close', () => res(false)).close())
+        .listen(port);
+});
 
 if (cluster.isMaster) {
     for (let i = 0; i < cpus; i++) {
@@ -22,7 +33,7 @@ if (cluster.isMaster) {
 
     fs.watchFile(routeFile, () => {
         console.log('route file updated');
-        !function tryRead() {
+        ! function tryRead() {
             try {
                 routes = fs.readJsonSync(routeFile);
             } catch (e) {
@@ -31,9 +42,13 @@ if (cluster.isMaster) {
         }()
     });
 
-    function getTarget(req) {
+    async function getTarget(req) {
         let port;
-        const { subdomain } = parseDomain(req.headers.host, {customTlds: /localhost/});
+        const {
+            subdomain
+        } = parseDomain(req.headers.host, {
+            customTlds: /localhost/
+        });
         if (subdomain === '') {
             port = routes.$;
         } else {
@@ -46,39 +61,51 @@ if (cluster.isMaster) {
                     break;
                 }
                 switch (typeof port) {
-                case 'number':
-                    break getport;
-                case 'object':
-                    if  (!port) break getport;
-                    port = port.$;
-                    break;
-                case 'undefined':
-                    break getport;
-                case 'string':
-                    port = port.split('.').reverse().join('.');
-                    break;
+                    case 'number':
+                        break getport;
+                    case 'object':
+                        if (!port) break getport;
+                        port = port.$;
+                        break;
+                    case 'undefined':
+                        break getport;
+                    case 'string':
+                        port = port.split('.').reverse().join('.');
+                        break;
                 }
             } while (true);
         }
         if (!port) port = routes._;
         if (!port) throw 'not found';
+        if (!await isPortInUse(port)) throw `nothing on port ${port}`;
         console.log(subdomain, port)
         return port;
     }
 
-    const server = http.createServer((req, res) => {
+    const server = http.createServer(async (req, res) => {
         try {
-            proxy.web(req, res, {target: `http://localhost:${getTarget(req)}`});
+            proxy.web(req, res, {
+                target: `http://localhost:${await getTarget(req)}`
+            });
         } catch (e) {
             res.statusCode = e === 'not found' ? 404 : 500;
             res.end('Error :' + e);
         }
     });
 
-    server.on('upgrade', (req, socket, head) => {
-        proxy.ws(req, socket, head, {target: `ws://localhost:${getTarget(req)}`});
+    server.on('upgrade', async (req, socket, head) => {
+        try {
+            proxy.ws(req, socket, head, {
+                target: `ws://localhost:${await getTarget(req)}`
+            });
+        } catch (e) {
+            console.error(e);
+            socket.destroy(e);
+        }
     });
-    
+
+    server.on('error', console.error);
+
     server.listen(
         process.env.PORT || 80,
         () => console.log(`Server ${cluster.worker.id} started`)
