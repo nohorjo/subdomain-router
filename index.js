@@ -53,6 +53,8 @@ if (cluster.isMaster) {
             port = routes.$;
         } else {
             port = subdomain.split('.').reverse().join('.');
+        }
+        if (typeof port !== 'number') {
             getport: do {
                 try {
                     port = eval(`routes.${port}`);
