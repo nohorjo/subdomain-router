@@ -1,6 +1,6 @@
 {
   "name": "subdomain-router",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Proxies traffic to other localhost ports based on subdomain",
   "main": "index.js",
   "scripts": {

@@ -55,7 +55,10 @@ if (cluster.isMaster) {
             port = subdomain.split('.').reverse().join('.');
         }
         if (typeof port !== 'number') {
+            const tested = [];
             getport: do {
+                if (tested.includes(port)) break;
+                tested.push(port);
                 try {
                     port = eval(`routes.${port}`);
                 } catch (e) {
@@ -70,14 +73,14 @@ if (cluster.isMaster) {
                         port = port.$;
                         break;
                     case 'undefined':
-                        break getport;
+                        port = routes._;
+                        break;
                     case 'string':
                         port = port.split('.').reverse().join('.');
                         break;
                 }
             } while (true);
         }
-        if (!port) port = routes._;
         if (!port) throw 'not found';
         if (!await isPortInUse(port)) throw `nothing on port ${port}`;
         console.log(subdomain, port)
