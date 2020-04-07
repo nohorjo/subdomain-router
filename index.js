@@ -45,12 +45,15 @@ if (cluster.isMaster) {
     async function getTarget(req) {
         let port;
         const {
-            subdomain
+            domain,
+            subdomain,
         } = parseDomain(req.headers.host, {
             customTlds: /localhost/
         });
+        if (!/[0-9a-z\.-]+/i.test(subdomain))
+            throw 'invalid subdomain';
         if (subdomain === '') {
-            port = routes.$;
+            port = routes[domain].$;
         } else {
             port = subdomain.split('.').reverse().join('.');
         }
@@ -60,7 +63,7 @@ if (cluster.isMaster) {
                 if (tested.includes(port)) break;
                 tested.push(port);
                 try {
-                    port = eval(`routes.${port}`);
+                    port = eval(`routes[domain].${port}`);
                 } catch (e) {
                     port = null;
                     break;

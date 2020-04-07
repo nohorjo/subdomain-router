@@ -13,20 +13,26 @@ eg.
 * second.sub.domain.com => 8081
 * sub.domain.com => 8082
 * domain.com => 8083
+* newdomain.com => 7000
 * another.domain.com => my.first.sub.domain.com
 * _anything else_ => 9999
 
 ```json
 {
-    "$": 8083,
-    "_": 9999,
-    "sub": {
-        "first": {
-            "my": 8080
+    "domain": {
+        "$": 8083,
+        "_": 9999,
+        "sub": {
+            "first": {
+                "my": 8080
+            },
+            "second": 8081,
+            "$": 8082
         },
-        "second": 8081,
-        "$": 8082
+        "another": "my.first.sub"
     },
-    "another": "my.first.sub"
+    "newdomain": {
+        "_": 7000
+    }
 }
 ```

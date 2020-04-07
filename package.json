@@ -1,6 +1,6 @@
 {
   "name": "subdomain-router",
-  "version": "1.2.3",
+  "version": "2.0.0",
   "description": "Proxies traffic to other localhost ports based on subdomain",
   "main": "index.js",
   "scripts": {
@@ -12,6 +12,6 @@
   "dependencies": {
     "fs-extra": "7.0.0",
     "http-proxy": "1.17.0",
-    "parse-domain": "2.1.7"
+    "parse-domain": "2.3.4"
   }
 }
