@@ -50,7 +50,7 @@ if (cluster.isMaster) {
         } = parseDomain(req.headers.host, {
             customTlds: /localhost/
         });
-        if (!/[0-9a-z\.-]+/i.test(subdomain))
+        if (!/^[0-9a-z\.-]*$/i.test(subdomain))
             throw 'invalid subdomain';
         if (subdomain === '') {
             port = routes[domain].$;
