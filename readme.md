@@ -15,6 +15,7 @@ eg.
 * domain.com => 8083
 * newdomain.com => 7000
 * another.domain.com => my.first.sub.domain.com
+* proxy.domain.com => tomyother.site
 * _anything else_ => 9999
 
 ```json
@@ -29,7 +30,8 @@ eg.
             "second": 8081,
             "$": 8082
         },
-        "another": "my.first.sub"
+        "another": "my.first.sub",
+        "proxy": "http://tomyother.site"
     },
     "newdomain": {
         "_": 7000

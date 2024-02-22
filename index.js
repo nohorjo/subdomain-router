@@ -79,22 +79,27 @@ if (cluster.isMaster) {
                         port = routes._;
                         break;
                     case 'string':
+                        if (port.startsWith('http')) break getport;
                         port = port.split('.').reverse().join('.');
                         break;
                 }
             } while (true);
         }
         if (!port) throw 'not found';
-        if (!await isPortInUse(port)) throw `nothing on port ${port}`;
+        if (
+            !(port.startsWith && port.startsWith('http'))
+            && !await isPortInUse(port)
+        ) throw `nothing on port ${port}`;
         console.log(subdomain, port)
         return port;
     }
 
     const server = http.createServer(async (req, res) => {
         try {
-            proxy.web(req, res, {
-                target: `http://localhost:${await getTarget(req)}`
-            });
+            let target = await getTarget(req);
+            if (!isNaN(target))
+                target = `http://localhost:${target}`;
+            proxy.web(req, res, { target });
         } catch (e) {
             res.statusCode = e === 'not found' ? 404 : 500;
             res.end('Error :' + e);
