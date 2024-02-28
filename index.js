@@ -79,7 +79,7 @@ if (cluster.isMaster) {
                         port = routes._;
                         break;
                     case 'string':
-                        if (port.startsWith('http')) break getport;
+                        if (isSpecialRoute(port)) break getport;
                         port = port.split('.').reverse().join('.');
                         break;
                 }
@@ -87,7 +87,7 @@ if (cluster.isMaster) {
         }
         if (!port) throw 'not found';
         if (
-            !(port.startsWith && port.startsWith('http'))
+            !isSpecialRoute(port)
             && !await isPortInUse(port)
         ) throw `nothing on port ${port}`;
         console.log(subdomain, port)
@@ -97,10 +97,23 @@ if (cluster.isMaster) {
     const server = http.createServer(async (req, res) => {
         try {
             let target = await getTarget(req);
-            if (!isNaN(target))
+            if (!isNaN(target)) {
                 target = `http://localhost:${target}`;
+            } else {
+                switch (target[0]) {
+                    case 'U':
+                        target = target.slice(2);
+                        break;
+                    case 'R':
+                        target = target.slice(2);
+                        res.writeHead(302, { Location: target });
+                        res.end();
+                        return;
+                }
+            }
             proxy.web(req, res, { target });
         } catch (e) {
+            console.error(e);
             res.statusCode = e === 'not found' ? 404 : 500;
             res.end('Error :' + e);
         }
@@ -123,4 +136,8 @@ if (cluster.isMaster) {
         process.env.PORT || 80,
         () => console.log(`Server ${cluster.worker.id} started`)
     );
+
+    function isSpecialRoute(r) {
+        return r.match && r.match(/^[A-Z]:/);
+    }
 }

@@ -16,6 +16,7 @@ eg.
 * newdomain.com => 7000
 * another.domain.com => my.first.sub.domain.com
 * proxy.domain.com => tomyother.site
+* redirect.domain.com => _Redirects to_ https://redirecto.site
 * _anything else_ => 9999
 
 ```json
@@ -31,7 +32,8 @@ eg.
             "$": 8082
         },
         "another": "my.first.sub",
-        "proxy": "http://tomyother.site"
+        "proxy": "U:http://tomyother.site",
+        "redirect": "R:https://redirecto.site"
     },
     "newdomain": {
         "_": 7000
