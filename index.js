@@ -104,6 +104,8 @@ if (cluster.isMaster) {
                     case 'U':
                         target = target.slice(2);
                         break;
+                    case 'S':
+                        target = target + req.url;
                     case 'R':
                         target = target.slice(2);
                         res.writeHead(302, { Location: target });
